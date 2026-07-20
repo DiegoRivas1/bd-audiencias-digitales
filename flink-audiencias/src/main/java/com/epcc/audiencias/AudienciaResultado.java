@@ -1,18 +1,17 @@
 package com.epcc.audiencias;
 
 import java.io.Serializable;
-import java.util.List;
 
 public class AudienciaResultado implements Serializable {
     public String user_id;
     public String agent_type;
-    public List<String> audiencias;
+    public String audiencias;   // lista de audiencias unidas por " | "
     public String timestamp;
 
     public AudienciaResultado() {
     }
 
-    public AudienciaResultado(String user_id, String agent_type, List<String> audiencias, String timestamp) {
+    public AudienciaResultado(String user_id, String agent_type, String audiencias, String timestamp) {
         this.user_id = user_id;
         this.agent_type = agent_type;
         this.audiencias = audiencias;

@@ -86,7 +86,7 @@ public class ClasificadorAudiencias extends KeyedProcessFunction<String, Evento,
                 List<String> audienciasDetectadas = evaluarReglas(v, vE, ac, ca, maxCompra, comprasTotales);
                 if (!audienciasDetectadas.isEmpty()) {
                     out.collect(new AudienciaResultado(evento.user_id, evento.agent_type,
-                            audienciasDetectadas, evento.timestamp));
+                            String.join(" | ", audienciasDetectadas), evento.timestamp));
                 }
                 // se reinicia el estado de la sesion, pero se conserva el historico de compras
                 v = 0; vE = 0; ac = 0; ca = 0; maxCompra = 0.0;
