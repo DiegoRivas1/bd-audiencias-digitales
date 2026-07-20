@@ -1,4 +1,4 @@
-# Arquitectura — Plataforma de Audiencias Digitales en Tiempo Real
+# Arquitectura  Plataforma de Audiencias Digitales en Tiempo Real
 
 ## Flujo general
 
