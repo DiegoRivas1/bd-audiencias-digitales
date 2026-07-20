@@ -1,7 +1,7 @@
 # Plataforma Inteligente para Simulación y Análisis de Audiencias Digitales en Tiempo Real
 
-**Curso:** BigData 2026A — UNSA-EPCC
-**Trabajo:** Unidad II — Arquitectura Orientada a Eventos (Agentes → Kafka → Flink → Audiencias → Dashboard)
+**Curso:** BigData 2026A
+**Trabajo:** Unidad III  Arquitectura Orientada a Eventos (Agentes → Kafka → Flink → Audiencias → Dashboard)
 
 ## Arquitectura
 
