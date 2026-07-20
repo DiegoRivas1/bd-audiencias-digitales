@@ -26,6 +26,8 @@ public class MainDashboardPipeline {
     public static final String TOPIC_METRICAS_OUT = "audiencias-metricas-output";
     public static final String TOPIC_AUDIENCIAS_OUT = "audiencias-resultado-output";
 
+    private static final ObjectMapper MAPPER_AUDIENCIAS = new ObjectMapper();
+
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -102,7 +104,7 @@ public class MainDashboardPipeline {
         DataStream<String> audienciasJson = eventos
                 .keyBy(e -> e.user_id)
                 .process(new ClasificadorAudiencias())
-                .map(resultado -> new ObjectMapper().writeValueAsString(resultado));
+                .map(resultado -> MAPPER_AUDIENCIAS.writeValueAsString(resultado));
 
         audienciasJson.sinkTo(construirSink(TOPIC_AUDIENCIAS_OUT));
 
