@@ -5,10 +5,10 @@ set -e
 
 BROKER="localhost:9092"
 
-bin/kafka-topics.sh --create --if-not-exists --topic user-events \
+bin/kafka-topics.sh --create --if-not-exists --topic audiencias-user-events \
     --bootstrap-server "$BROKER" --partitions 6 --replication-factor 1
 
-bin/kafka-topics.sh --create --if-not-exists --topic purchase-events \
+bin/kafka-topics.sh --create --if-not-exists --topic audiencias-purchase-events \
     --bootstrap-server "$BROKER" --partitions 6 --replication-factor 1
 
 echo "== Topics creados =="

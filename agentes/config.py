@@ -6,8 +6,8 @@ de productos y cuántos agentes de cada perfil se van a lanzar.
 # --- Kafka ---
 BOOTSTRAP_SERVERS = ['localhost:9092']  # cambia si el productor corre fuera de la EC2
 
-TOPIC_USER_EVENTS = 'user-events'
-TOPIC_PURCHASE_EVENTS = 'purchase-events'
+TOPIC_USER_EVENTS = 'audiencias-user-events'
+TOPIC_PURCHASE_EVENTS = 'audiencias-purchase-events'
 
 # --- Catálogo de productos: (nombre, categoria, precio_base) ---
 CATALOGO = [
