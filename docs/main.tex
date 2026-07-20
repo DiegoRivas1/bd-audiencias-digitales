@@ -1,0 +1,432 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{enumitem}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{accent}{RGB}{28,110,140}
+
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray!40},
+  columns=fullflexible,
+  captionpos=b
+}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=accent,
+  urlcolor=accent,
+  citecolor=accent
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\headheight}{14pt}
+\rhead{Trabajo Unidad II — BigData 2026A}
+\lhead{UNSA-EPCC}
+\rfoot{\thepage}
+
+\newcommand{\placeholderCaptura}[2]{%
+\begin{center}
+\begin{tikzpicture}
+\node[draw, dashed, gray, minimum width=13cm, minimum height=#2,
+      text width=12cm, align=center, font=\ttfamily\small, color=gray]
+      {[Insertar captura aqu\'i: \\ \texttt{#1}]};
+\end{tikzpicture}
+\end{center}
+}
+
+\title{
+\vspace{-1cm}
+\begin{center}
+\textbf{UNIVERSIDAD NACIONAL DE SAN AGUST\'IN DE AREQUIPA}\\
+\textbf{ESCUELA PROFESIONAL DE CIENCIA DE LA COMPUTACI\'ON}\\[0.2cm]
+\textsc{Curso: BigData 2026A}\\[1cm]
+\rule{\textwidth}{0.5pt}\\[0.3cm]
+{\LARGE \textbf{Trabajo Unidad III}}\\[0.3cm]
+{\Large Plataforma Inteligente para Simulaci\'on y An\'alisis de\\
+Audiencias Digitales en Tiempo Real utilizando\\
+Arquitecturas Orientadas a Eventos}\\[0.3cm]
+\rule{\textwidth}{0.5pt}
+\end{center}
+}
+
+\author{Rivas Huanca Diego Raul \\
+Sumare Uscca Josue Gabriel \\
+Humpiri Valdivia Freddy Leonel\\
+Escuela Profesional de Ciencia de la Computaci\'on}
+\date{Julio 2026}
+
+\begin{document}
+
+\begin{titlepage}
+\maketitle
+\thispagestyle{empty}
+\vfill
+\begin{center}
+\small Repositorio del proyecto: \url{https://github.com/DiegoRivas1/bd-audiencias-digitales}
+\end{center}
+\end{titlepage}
+
+\renewcommand{\contentsname}{Índice}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Introducci\'on}
+% ============================================================
+
+Las organizaciones modernas generan volúmenes masivos de eventos digitales, inicios de sesión, búsquedas, visualizaciones de producto, compras que
+tradicionalmente se analizaban mediante procesamiento por lotes, con
+retrasos de horas o días. Este trabajo implementa una plataforma de
+\textbf{procesamiento de datos en tiempo real} basada en una
+\textbf{Arquitectura Orientada a Eventos (EDA)}, capaz de simular el
+comportamiento de decenas de usuarios digitales mediante agentes
+autónomos, capturar sus eventos con Apache Kafka, procesarlos
+continuamente con Apache Flink para construir audiencias digitales, y
+visualizar los resultados en un dashboard interactivo en tiempo real.
+
+El objetivo del proyecto es demostrar el flujo completo
+\emph{agentes~$\rightarrow$~Kafka~$\rightarrow$~Flink~$\rightarrow$~audiencias~$\rightarrow$~dashboard},
+y analizar cómo cambia el comportamiento agregado de la plataforma bajo
+distintos escenarios comerciales (día normal, Cyber Monday, campaña
+escolar, etc.).
+
+% ============================================================
+\section{Marco conceptual}
+% ============================================================
+
+\subsection{Arquitectura Orientada a Eventos (EDA)}
+Un modelo de diseño donde los componentes de software no se comunican
+directamente entre sí, sino que publican \textbf{eventos} acciones
+significativas ocurridas en el sistema en un canal común, permitiendo que
+otros componentes los consuman de forma independiente y desacoplada.
+
+\subsection{Event Streaming y Apache Kafka}
+El \emph{Event Streaming} es el procesamiento continuo de eventos
+conforme se producen, a diferencia del procesamiento por lotes. Apache
+Kafka es la plataforma de streaming utilizada como intermediario:
+organiza los eventos en \textbf{tópicos}, particionados para permitir
+paralelismo y alta disponibilidad.
+
+\subsection{Apache Flink}
+Motor de procesamiento de flujos de datos (\emph{Stream Processing
+Engine}) usado para consumir los eventos desde Kafka y aplicar
+transformaciones continuas: filtrado, enriquecimiento, ventanas de
+tiempo, agregaciones y clasificación basada en reglas de negocio.
+
+\subsection{Audiencias digitales}
+Conjuntos de usuarios agrupados según patrones de comportamiento
+observados en tiempo real (y no solo datos demográficos estáticos), útiles
+para personalizar campañas, detectar riesgo de abandono o identificar
+clientes de alto valor.
+
+% ============================================================
+\section{Arquitectura del sistema}
+% ============================================================
+
+El sistema implementado sigue el flujo:
+
+\begin{center}
+\begin{verbatim}
+Agentes simulados (Python, 8 perfiles)
+        |  publican eventos JSON
+        v
+Apache Kafka  (audiencias-user-events, audiencias-purchase-events)
+        |  consumido continuamente
+        v
+Apache Flink  (metricas por ventana + clasificador de audiencias)
+        |  publica resultados JSON
+        v
+Kafka  (audiencias-metricas-output, audiencias-resultado-output)
+        |  consumido por
+        v
+Backend FastAPI (WebSocket)  --->  Dashboard web en tiempo real
+\end{verbatim}
+\end{center}
+
+A diferencia de una arquitectura con base de datos intermedia, aquí Flink
+publica sus resultados directamente a nuevos tópicos de Kafka, y un
+backend ligero en FastAPI los retransmite por WebSocket al navegador. Esto
+evita la complejidad de una capa de persistencia adicional, manteniendo
+el principio de streaming de punta a punta: cada resultado se empuja al
+cliente apenas se calcula, sin necesidad de que el dashboard haga polling
+a una base de datos.
+
+\subsection{Infraestructura desplegada}
+Todo el sistema corre sobre una instancia EC2 (Ubuntu 24.04, \texttt{t3.large},
+2 vCPU / 8 GiB RAM) en AWS Academy, con cuatro procesos concurrentes:
+el broker de Kafka, el job de Flink, el backend del dashboard, y el
+simulador de agentes.
+
+% ============================================================
+\section{Dise\~no e implementaci\'on}
+% ============================================================
+
+\subsection{Simulador de agentes}
+
+Se implementaron 8 perfiles de comportamiento, cada uno corriendo en su
+propio hilo y generando sesiones completas de navegación (login
+$\rightarrow$ ver/buscar productos $\rightarrow$ carrito
+$\rightarrow$ compra o abandono $\rightarrow$ logout):
+
+\begin{center}
+\begin{longtable}{@{}p{3.2cm}p{9.5cm}@{}}
+\toprule
+\textbf{Perfil} & \textbf{Comportamiento} \\
+\midrule
+\endhead
+Comprador compulsivo & Compra rápido, consulta pocos productos, alta probabilidad de compra \\
+Comparador & Consulta muchos productos, compara precios, compra ocasionalmente \\
+Comprador nocturno & Solo genera actividad entre las 22:00 y las 05:00 \\
+Cliente Premium & Compra pocas veces, pero de alto valor (S/1500 -- S/6000) \\
+Cliente Frecuente & Realiza compras constantemente, alta frecuencia de sesión \\
+Usuario Explorador & Navega mucho (8--20 productos), nunca compra \\
+Cliente Indeciso & Agrega y quita productos del carrito repetidamente \\
+Cliente Estacional & Su comportamiento se amplifica según el escenario comercial activo \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+Cada agente publica eventos JSON con la estructura:
+\begin{lstlisting}
+{
+  "timestamp": "2026-07-20T02:21:53",
+  "user_id": "USR55301",
+  "company": "Retail",
+  "event": "VIEW_PRODUCT",
+  "product": "Laptop Lenovo",
+  "category": "Electronics",
+  "city": "Arequipa",
+  "price": 3341.50,
+  "agent_id": "CLIENTE_ESTACIONAL_01",
+  "agent_type": "CLIENTE_ESTACIONAL"
+}
+\end{lstlisting}
+
+Adicionalmente, se implementaron \textbf{7 escenarios comerciales}
+(\texttt{normal}, \texttt{navidad}, \texttt{cyber\_monday},
+\texttt{black\_friday}, \texttt{dia\_del\_padre},
+\texttt{fiestas\_patrias}, \texttt{campana\_escolar}), cada uno aplicando
+multiplicadores globales sobre la probabilidad de compra, la frecuencia
+de sesiones y el valor promedio de compra de \emph{todos} los agentes,
+simulando el efecto de una campaña real sobre el tráfico de la
+plataforma.
+
+\subsection{Apache Kafka}
+
+Se configuraron 4 tópicos:
+
+\begin{center}
+\begin{tabular}{@{}llc@{}}
+\toprule
+\textbf{Tópico} & \textbf{Contenido} & \textbf{Particiones} \\
+\midrule
+\texttt{audiencias-user-events} & LOGIN, SEARCH, VIEW\_PRODUCT, ADD\_CART, REMOVE\_CART, LOGOUT & 6 \\
+\texttt{audiencias-purchase-events} & PURCHASE, PAYMENT\_FAILED & 6 \\
+\texttt{audiencias-metricas-output} & Métricas agregadas por ventana (salida de Flink) & 1 \\
+\texttt{audiencias-resultado-output} & Audiencias detectadas por usuario (salida de Flink) & 3 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Apache Flink: métricas y clasificación de audiencias}
+
+Se implementó un único job (\texttt{MainDashboardPipeline}) con dos
+ramas de procesamiento sobre el mismo stream de eventos:
+
+\textbf{Rama de métricas} (ventanas de 15 segundos, \texttt{TumblingProcessingTimeWindows}):
+eventos totales, eventos por segundo, usuarios activos distintos, eventos
+por tipo, top 5 productos más vistos/comprados, compras por ciudad, y
+tasa de conversión (\texttt{PURCHASE} / \texttt{ADD\_CART}).
+
+\textbf{Rama de audiencias} (estado por usuario mediante
+\texttt{KeyedProcessFunction}, \texttt{keyBy(user\_id)}): mantiene
+contadores de sesión (vistas, vistas en categoría Electronics, productos
+agregados al carrito, carrito activo, valor máximo de compra) y un
+contador histórico de compras que persiste entre sesiones. Al detectar el
+evento \texttt{LOGOUT}, evalúa las siguientes reglas:
+
+\begin{center}
+\begin{longtable}{@{}p{3.6cm}p{9cm}@{}}
+\toprule
+\textbf{Audiencia} & \textbf{Regla} \\
+\midrule
+\endhead
+Alta intención de compra / Abandono de carrito & Agregó productos al carrito pero no completó ninguna compra en la sesión \\
+Cliente Frecuente & 3 o más compras completadas (histórico acumulado) \\
+Cliente Premium & Alguna compra de la sesión superó S/1500 \\
+Interesado en Tecnología & Al menos 60\% de sus vistas fueron de la categoría \emph{Electronics} \\
+Riesgo de Abandono & Navegó bastante (5+ vistas) pero nunca agregó nada al carrito \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+Un mismo usuario puede activar varias audiencias simultáneamente (por
+ejemplo, \texttt{ALTA\_INTENCION\_COMPRA} \texttt{|} \texttt{INTERESADO\_TECNOLOGIA}),
+lo cual se observó consistentemente en las pruebas.
+
+\subsection{Dashboard en tiempo real}
+
+Backend en FastAPI que consume los tópicos de salida de Flink
+(\texttt{KafkaConsumer} en un hilo aparte) y retransmite cada mensaje
+nuevo a todos los clientes conectados vía WebSocket, sin persistencia
+intermedia. El frontend (HTML/CSS/JS + Chart.js) muestra:
+
+\begin{itemize}[nosep]
+\item KPIs en vivo: eventos totales, eventos/segundo, usuarios activos, conversión
+\item Gráfico de eventos por tipo y de compras por ciudad
+\item Tablas de productos más vistos y más comprados
+\item Feed en vivo de audiencias detectadas por usuario
+\item Alertas automáticas (ej. conversión baja, alta tasa de pagos rechazados)
+\end{itemize}
+
+% ============================================================
+\section{Resultados: comparativa de escenarios}
+% ============================================================
+
+Se ejecutó el simulador (20 agentes, 8 perfiles) bajo tres escenarios de
+forma secuencial y aislada (un único proceso productor activo por
+corrida, confirmado mediante el conteo de usuarios activos en el
+dashboard, siempre $\leq$ 20), dejando correr cada uno un par de minutos
+antes de capturar resultados.
+
+\begin{center}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Escenario} & \textbf{Eventos} & \textbf{Ev./seg} & \textbf{Usuarios} & \textbf{Conversión} & \textbf{Mult. prob. compra} \\
+\midrule
+Campaña Escolar & 128 & 8.53 & 18 & 23.1\% & 1.3$\times$ \\
+Normal (base) & 111 & 7.40 & 18 & 31.6\% & 1.0$\times$ \\
+Cyber Monday & 150 & 10.00 & 18 & 33.3\% & 2.2$\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Análisis}
+
+Los resultados muestran una tendencia \textbf{coherente con la
+configuración de multiplicadores} definida para cada escenario: Campaña
+Escolar (multiplicador de compra más bajo, 1.3$\times$) produjo la menor
+conversión observada (23.1\%), mientras que Cyber Monday (multiplicador
+más alto, 2.2$\times$) produjo la mayor (33.3\%), con el escenario Normal
+como punto intermedio. El volumen de eventos por segundo también creció
+en el mismo orden (Campaña Escolar $<$ Normal $<$ Cyber Monday), reflejando
+el multiplicador de frecuencia de sesiones de cada escenario.
+
+Es importante notar que la conversión no escaló de forma estrictamente
+lineal con el multiplicador (2.2$\times$ el multiplicador no produjo
+2.2$\times$ la conversión base), lo cual es esperado: la probabilidad de
+compra está acotada a un máximo de 0.95 en el motor del agente
+(\texttt{perfiles.py}), y no todos los perfiles reaccionan igual al
+escenario (por ejemplo, el Usuario Explorador nunca compra
+independientemente del escenario activo).
+
+En una corrida adicional de mayor duración bajo \texttt{cyber\_monday}
+(8632 eventos acumulados, 20 usuarios activos), la conversión general se
+estabilizó en 36.9\%, con \emph{Mouse Logitech}, \emph{Mochila Escolar} y
+\emph{Laptop Lenovo} como los productos más comprados, y una distribución
+de compras razonablemente uniforme entre las 5 ciudades simuladas
+(Piura, Lima, Arequipa, Cusco, Trujillo), lo que confirma que el
+simulador no introduce sesgos geográficos artificiales.
+
+\subsection{Audiencias detectadas por escenario}
+
+En los tres escenarios se observaron consistentemente las 5 audiencias
+definidas, con las combinaciones \texttt{ALTA\_INTENCION\_COMPRA /
+ABANDONO\_CARRITO} e \texttt{INTERESADO\_TECNOLOGIA} como las más
+frecuentes esperable dado que el catálogo de productos tiene una alta
+proporción de artículos de la categoría \emph{Electronics}. Se detectaron
+además usuarios con múltiples audiencias simultáneas (por ejemplo,
+\texttt{CLIENTE\_PREMIUM | INTERESADO\_TECNOLOGIA}), demostrando que el
+clasificador no trata las audiencias como mutuamente excluyentes,
+reflejando mejor el comportamiento real de un usuario.
+
+% ============================================================
+\section{Capturas de pantalla}
+% ============================================================
+
+\subsection{Dashboard — Escenario Normal}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{docs/capturas/dashboard_normal.png}
+\end{center}
+
+\subsection{Dashboard — Escenario Campaña Escolar}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{docs/capturas/dashboard_campana_escolar.png}
+\end{center}
+
+\subsection{Dashboard — Escenario Cyber Monday}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{docs/capturas/dashboard_cyber_monday.png}
+\end{center}
+
+
+
+% ============================================================
+\section{Conclusiones}
+% ============================================================
+
+\begin{enumerate}
+\item Se implementó exitosamente el flujo completo de una arquitectura
+orientada a eventos, desde la generación simulada de tráfico hasta la
+visualización en tiempo real, sin componentes de procesamiento por
+lotes en ninguna etapa.
+
+\item El diseño de agentes con perfiles de comportamiento diferenciados,
+combinado con escenarios que aplican multiplicadores globales, permitió
+observar cambios de comportamiento agregado consistentes y explicables
+por el diseño (mayor multiplicador de probabilidad de compra
+$\rightarrow$ mayor conversión observada), validando que el simulador
+responde correctamente a los parámetros configurados.
+
+\item El uso de \texttt{KeyedProcessFunction} en Flink permitió mantener
+estado por usuario a lo largo de una sesión (y parcialmente entre
+sesiones, para el conteo histórico de compras) sin necesidad de una base
+de datos externa, resolviendo la clasificación de audiencias
+completamente en memoria dentro del propio job de streaming.
+
+\item Publicar los resultados de Flink directamente a tópicos de Kafka
+de salida, consumidos por un backend WebSocket sin capa de persistencia,
+demostró ser una arquitectura suficiente y más simple que introducir una
+base de datos intermedia, para el caso de uso de visualización en tiempo
+real de este proyecto.
+
+\item Entre las dificultades técnicas resueltas destacan: conflictos de
+classloading de Flink al ejecutarse vía plugins de Maven (resuelto
+empaquetando un \emph{fat jar} con \texttt{maven-shade-plugin}),
+incompatibilidad de Kryo con el sistema de módulos de Java 17 al
+serializar colecciones en POJOs (resuelto evitando \texttt{List} en
+favor de \texttt{String} en los objetos de resultado), y conflictos de
+versión entre \texttt{jackson-core} y \texttt{jackson-databind}
+resueltos fijando versiones explícitas en el \texttt{pom.xml}.
+\end{enumerate}
+
+% ============================================================
+\section{Referencias}
+% ============================================================
+
+\begin{itemize}[nosep]
+\item Apache Software Foundation. (2026). \emph{Apache Kafka Documentation}. \url{https://kafka.apache.org/documentation/}
+\item Apache Software Foundation. (2026). \emph{Apache Flink Documentation}. \url{https://nightlies.apache.org/flink/flink-docs-stable/}
+\item Kleppmann, M. (2017). \emph{Designing Data-Intensive Applications}. O'Reilly Media.
+\item AWS Documentation. (2026). \emph{Amazon Managed Service for Apache Flink}. \url{https://docs.aws.amazon.com/managed-flink/}
+\end{itemize}
+
+\end{document}
