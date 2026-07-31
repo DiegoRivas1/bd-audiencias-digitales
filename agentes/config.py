@@ -30,7 +30,7 @@ CIUDADES = ['Arequipa', 'Lima', 'Cusco', 'Trujillo', 'Piura']
 COMPANY = 'Retail'
 
 # --- Cuántos agentes lanzar por cada perfil ---
-# Ajusta estos números según cuánta carga quieras simular.
+# Ajusta .
 AGENTES_POR_PERFIL = {
     "COMPRADOR_COMPULSIVO": 3,
     "COMPARADOR": 3,

@@ -3,6 +3,10 @@
 **Curso:** BigData 2026A
 **Trabajo:** Unidad III  Arquitectura Orientada a Eventos (Agentes → Kafka → Flink → Audiencias → Dashboard)
 
+## Demo
+![demo](docs/demo_audi_corto.gif)
+
+
 ## Arquitectura
 
 ```
